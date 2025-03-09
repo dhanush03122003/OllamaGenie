@@ -21,11 +21,13 @@ class OllamaInstaller:
         self.install_dir = install_dir
         self.mode = mode
         self.debug = debug
-        self.installer_path = os.path.join(self.install_dir, self.installer_name)
+        self.installer_path = os.path.join(self.install_dir, self.installer_name) if self.install_dir else self.installer_name
+        print(self.installer_path)
         self.log_file = self.get_log_filename()
         
         # Ensure save directory exists
-        os.makedirs(self.install_dir, exist_ok=True)
+        if self.install_dir: 
+            os.makedirs(self.install_dir, exist_ok=True)
 
     def get_log_filename(self):
         """Generate a unique log filename in the format: {base_name}_{dd-mm-yyyy}_{hrs-mins-secs}.log"""
@@ -154,7 +156,7 @@ class OllamaInstaller:
 
 # Example usage
 # if __name__ == "__main__":
-#     install_directory = r"C:\AI_MODEL\ollama123"
+#     install_directory = r"C:\AI_MODEL\ollama"
 #     mode = "silent"  # Change to None for normal mode
 #     debug = True  # Set to True for real-time log monitoring
 
