@@ -28,6 +28,8 @@ class OllamaInstaller:
         # Ensure save directory exists
         if self.install_dir: 
             os.makedirs(self.install_dir, exist_ok=True)
+        if self.models_path:
+            os.makedirs(self.models_path, exist_ok=True)
 
     def kill_ollama(self):
         """Kill all Ollama processes."""
@@ -55,8 +57,9 @@ class OllamaInstaller:
     def start_ollama(self):
         """Restart Ollama server and print its output."""
         try:
+            ollama_path = os.path.join(self.install_dir, "ollama app.exe")
             process = subprocess.Popen(
-                "ollama list", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+                ollama_path, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
             )
 
             time.sleep(3)  # Wait for 3 seconds
@@ -222,9 +225,9 @@ class OllamaInstaller:
             return None
         
     def set_models_location(self,models_path):
-        if models_path is not None and not os.path.exists(models_path):
-            print("Invalid path location for saving the models")
-            return 
+        # if models_path is not None and not os.path.exists(models_path):
+        #     print("Invalid path location for saving the models")
+        #     return 
         existing_value = self.system_var_exists("OLLAMA_MODELS")
 
         if existing_value:
@@ -265,5 +268,3 @@ if __name__ == "__main__":
     installer.install_ollama()
     installer.set_models_location(models_location)
     installer.restart_ollama()
-
-
