@@ -8,6 +8,7 @@ import os
 from gtts import gTTS
 from ollama import chat
 from DHANUSH_REQUIREMENT import type_out
+from chat_history import ChatHistory  # ✅ Importing ChatHistory
 
 class SpeechHandler:
     """Handles text-to-speech and speech-to-text conversion."""
@@ -44,24 +45,6 @@ class SpeechHandler:
         except (sr.UnknownValueError, sr.RequestError):
             print("❌ Sorry, I couldn't understand.")
             return None
-
-class ChatHistory:
-    """Handles storing and managing chat history."""
-    
-    def __init__(self):
-        self.history = [{"role": "system", "content": "You are a helpful assistant."}]
-    
-    def add_user_message(self, message):
-        """Adds a user message to chat history."""
-        self.history.append({"role": "user", "content": message})
-    
-    def add_bot_response(self, response):
-        """Adds a chatbot response to chat history."""
-        self.history.append({"role": "assistant", "content": response})
-    
-    def get_history(self):
-        """Returns the chat history."""
-        return self.history
 
 class Chatbot:
     """Handles AI chatbot interactions."""
@@ -124,7 +107,7 @@ class ChatAssistant:
         self.speech_handler = SpeechHandler()
         self.model_handler = OllamaModelHandler()
         self.model = self.model_handler.choose_model()
-        self.chat_history = ChatHistory()
+        self.chat_history = ChatHistory()  # ✅ Using imported ChatHistory
         self.chatbot = Chatbot(self.model, self.chat_history)
         self.input_mode = input("Choose input mode: '1' for typing, '2' for speaking: ")
         self.user_name = os.getenv('USERNAME') or os.getenv('USER') or "there"
