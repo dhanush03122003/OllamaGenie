@@ -8,7 +8,7 @@ import os
 from gtts import gTTS
 from ollama import chat
 from DHANUSH_REQUIREMENT import type_out
-from chat_history import ChatHistory  # ✅ Importing ChatHistory
+from chat_history import ChatHistory 
 
 class SpeechHandler:
     """Handles text-to-speech and speech-to-text conversion."""
@@ -22,7 +22,7 @@ class SpeechHandler:
             sd.play(data, samplerate)
             sd.wait()
         except Exception as e:
-            print(f"❌ Speech generation error: {e}")
+            print(f"Speech generation error: {e}")
     
     def listen(self):
         """Converts speech to text."""
@@ -30,7 +30,7 @@ class SpeechHandler:
         mic = sr.Microphone()
         
         with mic as source:
-            print("\n🎤 Listening... (Speak now)")
+            print("\nListening... (Speak now)")
             recognizer.adjust_for_ambient_noise(source, duration=1)
             try:
                 audio = recognizer.listen(source, timeout=10, phrase_time_limit=5)
@@ -40,10 +40,10 @@ class SpeechHandler:
         
         try:
             text = recognizer.recognize_google(audio).lower().strip()
-            print(f"🗣️ You said: {text}")
+            print(f"You said: {text}")
             return text
         except (sr.UnknownValueError, sr.RequestError):
-            print("❌ Sorry, I couldn't understand.")
+            print("Sorry, I couldn't understand.")
             return None
 
 class Chatbot:
@@ -75,10 +75,10 @@ class OllamaModelHandler:
                 lines = result.stdout.strip().split("\n")
                 return [line.split()[0] for line in lines[1:]] if len(lines) > 1 else []
             else:
-                print("❌ Error fetching Ollama models:", result.stderr)
+                print("Error fetching Ollama models:", result.stderr)
                 return []
         except FileNotFoundError:
-            print("❌ Ollama is not installed or not found in PATH.")
+            print("Ollama is not installed or not found in PATH.")
             return []
     
     def choose_model(self):
@@ -98,7 +98,7 @@ class OllamaModelHandler:
                 choice = int(choice)
                 if 1 <= choice <= len(available_models):
                     return available_models[choice - 1]
-            print("❌ Invalid choice. Please enter a valid number.")
+            print("Invalid choice. Please enter a valid number.")
 
 class ChatAssistant:
     """Handles user queries and AI chatbot interactions."""
@@ -107,7 +107,7 @@ class ChatAssistant:
         self.speech_handler = SpeechHandler()
         self.model_handler = OllamaModelHandler()
         self.model = self.model_handler.choose_model()
-        self.chat_history = ChatHistory()  # ✅ Using imported ChatHistory
+        self.chat_history = ChatHistory()  
         self.chatbot = Chatbot(self.model, self.chat_history)
         self.input_mode = input("Choose input mode: '1' for typing, '2' for speaking: ")
         self.user_name = os.getenv('USERNAME') or os.getenv('USER') or "there"
