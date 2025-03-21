@@ -5,10 +5,11 @@ import sounddevice as sd
 import soundfile as sf
 import speech_recognition as sr
 import os
+import tempfile
 from gtts import gTTS
 from ollama import chat
 from DHANUSH_REQUIREMENT import type_out
-from chat_history import ChatHistory 
+from chat_history import ChatHistory
 
 class SpeechHandler:
     """Handles text-to-speech and speech-to-text conversion."""
@@ -16,11 +17,15 @@ class SpeechHandler:
     def speak(self, text):
         """Converts text to speech and plays it."""
         try:
-            tts = gTTS(text=text, lang="en")
-            tts.save("temp_output.mp3")
-            data, samplerate = sf.read("temp_output.mp3")
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as temp_audio:
+                tts = gTTS(text=text, lang="en")
+                temp_audio_path = temp_audio.name
+                tts.save(temp_audio_path)
+            
+            data, samplerate = sf.read(temp_audio_path)
             sd.play(data, samplerate)
             sd.wait()
+            os.remove(temp_audio_path)
         except Exception as e:
             print(f"Speech generation error: {e}")
     
@@ -46,23 +51,33 @@ class SpeechHandler:
             print("Sorry, I couldn't understand.")
             return None
 
-class Chatbot:
-    """Handles AI chatbot interactions."""
+class ChatProcessor:
+    """Handles chatbot logic separately."""
     
     def __init__(self, model, chat_history):
         self.model = model
         self.chat_history = chat_history
-    
-    def ask(self, question):
-        """Generates a response from the chatbot."""
+
+    def process_question(self, question):
+        """Processes the user's question and returns a response."""
         print("\nThinking...")
         self.chat_history.add_user_message(question)
-        
+
         response = chat(model=self.model, messages=self.chat_history.get_history())
         cleaned_response = response.get('message', {}).get('content', "Unexpected response format.").strip()
-        
+
         self.chat_history.add_bot_response(cleaned_response)
         return cleaned_response
+
+class Chatbot:
+    """Manages chatbot interactions while delegating logic to ChatProcessor."""
+    
+    def __init__(self, model, chat_history):
+        self.processor = ChatProcessor(model, chat_history)
+
+    def ask(self, question):
+        """Delegates question processing to ChatProcessor."""
+        return self.processor.process_question(question)
 
 class OllamaModelHandler:
     """Handles selection and listing of available AI models."""
