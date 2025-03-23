@@ -1,14 +1,13 @@
 import subprocess
 import sys
 import time
-import sounddevice as sd
-import soundfile as sf
+# import sounddevice as sd
+# import soundfile as sf
 import speech_recognition as sr
 import os
 import tempfile
 from gtts import gTTS
 from ollama import chat
-from DHANUSH_REQUIREMENT import type_out
 from chat_history import ChatHistory
 
 class SpeechHandler:
@@ -63,9 +62,19 @@ class ChatProcessor:
         print("\nThinking...")
         self.chat_history.add_user_message(question)
 
-        response = chat(model=self.model, messages=self.chat_history.get_history())
-        cleaned_response = response.get('message', {}).get('content', "Unexpected response format.").strip()
+        # print(self.chat_history.get_history())
+        full_response = ""
+        
+        for response in chat(model=self.model, messages=self.chat_history.get_history(), stream=True):
+            chunk = response.get("message", {}).get("content", "")
+            print(chunk, end="", flush=True) 
+            full_response += chunk  
 
+        # Clean the final response
+        if full_response:
+            cleaned_response = full_response.strip()
+        else:
+            cleaned_response = "Unexpected response format."
         self.chat_history.add_bot_response(cleaned_response)
         return cleaned_response
 
@@ -118,11 +127,12 @@ class OllamaModelHandler:
 class ChatAssistant:
     """Handles user queries and AI chatbot interactions."""
     
-    def __init__(self):
+    def __init__(self , mongo_client_url="mongodb://localhost:27017/", database="AI_MODEL", collection="chat_history"):
+        print("12345")
         self.speech_handler = SpeechHandler()
         self.model_handler = OllamaModelHandler()
         self.model = self.model_handler.choose_model()
-        self.chat_history = ChatHistory()  
+        self.chat_history = ChatHistory(self.model , mongo_client_url , database ,collection)
         self.chatbot = Chatbot(self.model, self.chat_history)
         self.input_mode = input("Choose input mode: '1' for typing, '2' for speaking: ")
         self.user_name = os.getenv('USERNAME') or os.getenv('USER') or "there"
@@ -144,9 +154,9 @@ class ChatAssistant:
             if user_input.lower() in ["exit", "quit", "goodbye"]:
                 print(f"Goodbye, {self.user_name}! Session ended. ")
                 break
-            response = self.chatbot.ask(user_input)
-            type_out(response)
+            self.chatbot.ask(user_input)
 
 if __name__ == "__main__":
+    print("12233")
     assistant = ChatAssistant()
     assistant.run()

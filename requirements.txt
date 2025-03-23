@@ -1,0 +1,8 @@
+sounddevice
+soundfile
+SpeechRecognition
+gTTS
+ollama
+pymongo
+requests
+tqdm
