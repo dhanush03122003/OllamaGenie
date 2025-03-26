@@ -152,9 +152,10 @@ class OllamaInstaller:
                 time.sleep(0.5)  # Retry if file is locked
 
     def is_ollama_installed(self):
+        print("Checking if Ollama is installed...")
         """Checks if Ollama is installed by looking for its executable."""
         try:
-            # Windows: 'where' command | Linux/macOS: 'which' command
+            os.environ["PATH"] = self.install_dir + os.pathsep + os.environ["PATH"] # Add install directory to PATH variables temporarily
             ollama_path = shutil.which("ollama")
             if ollama_path:
                 return ollama_path  # Ollama is installed
@@ -163,6 +164,7 @@ class OllamaInstaller:
 
         except Exception as e:
             print(f"Error checking Ollama installation: {e}")
+            input("Press Enter to continue...")
             return False  # Assume not installed on error
         
     def install_ollama(self):

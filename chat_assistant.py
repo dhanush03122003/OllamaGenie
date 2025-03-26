@@ -8,7 +8,7 @@ import os
 import tempfile
 from gtts import gTTS
 from ollama import chat
-from chat_history import ChatHistory
+from chat import Chat
 
 class SpeechHandler:
     """Handles text-to-speech and speech-to-text conversion."""
@@ -50,39 +50,11 @@ class SpeechHandler:
             print("Sorry, I couldn't understand.")
             return None
 
-class ChatProcessor:
-    """Handles chatbot logic separately."""
-    
-    def __init__(self, model, chat_history):
-        self.model = model
-        self.chat_history = chat_history
-
-    def process_question(self, question):
-        """Processes the user's question and returns a response."""
-        print("\nThinking...")
-        self.chat_history.add_user_message(question)
-
-        # print(self.chat_history.get_history())
-        full_response = ""
-        
-        for response in chat(model=self.model, messages=self.chat_history.get_history(), stream=True):
-            chunk = response.get("message", {}).get("content", "")
-            print(chunk, end="", flush=True) 
-            full_response += chunk  
-
-        # Clean the final response
-        if full_response:
-            cleaned_response = full_response.strip()
-        else:
-            cleaned_response = "Unexpected response format."
-        self.chat_history.add_bot_response(cleaned_response)
-        return cleaned_response
-
 class Chatbot:
     """Manages chatbot interactions while delegating logic to ChatProcessor."""
     
-    def __init__(self, model, chat_history):
-        self.processor = ChatProcessor(model, chat_history)
+    def __init__(self, chat):
+        self.processor = chat
 
     def ask(self, question):
         """Delegates question processing to ChatProcessor."""
@@ -128,12 +100,11 @@ class ChatAssistant:
     """Handles user queries and AI chatbot interactions."""
     
     def __init__(self , mongo_client_url="mongodb://localhost:27017/", database="AI_MODEL", collection="chat_history"):
-        print("12345")
         self.speech_handler = SpeechHandler()
         self.model_handler = OllamaModelHandler()
         self.model = self.model_handler.choose_model()
-        self.chat_history = ChatHistory(self.model , mongo_client_url , database ,collection)
-        self.chatbot = Chatbot(self.model, self.chat_history)
+        self.chat = Chat(self.model , mongo_client_url , database ,collection)
+        self.chatbot = Chatbot(self.chat)
         self.input_mode = input("Choose input mode: '1' for typing, '2' for speaking: ")
         self.user_name = os.getenv('USERNAME') or os.getenv('USER') or "there"
         self.welcome_user()
@@ -157,6 +128,5 @@ class ChatAssistant:
             self.chatbot.ask(user_input)
 
 if __name__ == "__main__":
-    print("12233")
     assistant = ChatAssistant()
     assistant.run()

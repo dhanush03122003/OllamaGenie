@@ -1,7 +1,8 @@
 # chat_history.py
 from db import Mongo
+from ollama import chat
 
-class ChatHistory(Mongo):
+class Chat(Mongo):
     """Handles storing and managing chat history."""
     
     def __init__(self, model, mongo_client_url, database, collection):
@@ -18,6 +19,27 @@ class ChatHistory(Mongo):
         except Exception as e:
             print(f"Error initializing ChatHistory: {e}")
             self.history = [{"role": "system", "content": "You are a helpful assistant."}]
+
+    def process_question(self, question):
+        """Processes the user's question and returns a response."""
+        print("\nThinking...")
+        self.add_user_message(question)
+
+        # print(self.get_history())
+        full_response = ""
+        
+        for response in chat(model=self.model, messages=self.get_history(), stream=True):
+            chunk = response.get("message", {}).get("content", "")
+            print(chunk, end="", flush=True) 
+            full_response += chunk  
+
+        # Clean the final response
+        if full_response:
+            cleaned_response = full_response.strip()
+        else:
+            cleaned_response = "Unexpected response format."
+        self.add_bot_response(cleaned_response)
+        return cleaned_response
     
     def add_user_message(self, message):
         """Adds a user message to chat history."""
