@@ -6,9 +6,11 @@ import subprocess
 from datetime import datetime
 from tqdm import tqdm
 from requests.adapters import HTTPAdapter, Retry
+import argparse
+
 
 class OllamaInstaller:
-    def __init__(self, install_dir=None, models_path=None, mode=None, debug=False):
+    def __init__(self, install_dir=None, setup_file_dir=None,  models_path=None, mode=None, debug=False ):
         """
         Initialize the Ollama Installer.
 
@@ -22,11 +24,18 @@ class OllamaInstaller:
         self.mode = mode
         self.debug = debug
         self.models_path = models_path
-        self.installer_path = os.path.join(self.install_dir, self.installer_name) if self.install_dir else self.installer_name
+
+        if setup_file_dir:
+           self.installer_path = setup_file_dir
+        else:
+            self.installer_path = os.path.join(self.install_dir, self.installer_name) if self.install_dir else self.installer_name
         self.log_file = self.get_log_filename()
         
         # Ensure save directory exists
-        if self.install_dir: 
+        if self.install_dir:
+            normalized_path = os.path.normpath(self.install_dir)  # Normalize path to remove trailing slashes
+            if os.path.basename(normalized_path) != "ollama":  # Check if the last directory is "ollama"
+                self.install_dir = os.path.join(self.install_dir, "ollama")
             os.makedirs(self.install_dir, exist_ok=True)
         if self.models_path:
             os.makedirs(self.models_path, exist_ok=True)
@@ -37,6 +46,11 @@ class OllamaInstaller:
 
         for process in processes:
             try:
+                task_list_process = subprocess.run(["tasklist"], capture_output=True, text=True)
+                if "ollama.exe" not in task_list_process.stdout:
+                    self.write_log("Ollama is not running.")
+                    print("Ollama is not running.")
+                    return
                 result = subprocess.run(["taskkill", "/F", "/IM", process], capture_output=True, text=True)
 
                 if "SUCCESS" in result.stdout:
@@ -151,11 +165,30 @@ class OllamaInstaller:
             except PermissionError:
                 time.sleep(0.5)  # Retry if file is locked
 
+    def check_ollama_installed(self):
+        command = (
+            'powershell -Command '
+            '"@(Get-Package | Where-Object { $_.Name -like \'*ollama*\' })"'
+        )
+        result = subprocess.run(command, capture_output=True, text=True, shell=True)
+
+        if result.returncode != 0:
+            print("Error running PowerShell command:", result.stderr)
+            return False
+
+        if not result.stdout.strip():
+            print("Ollama is NOT installed.")
+            return False
+        else:
+            print("Ollama is installed.")
+            return True
+
     def is_ollama_installed(self):
         print("Checking if Ollama is installed...")
         """Checks if Ollama is installed by looking for its executable."""
         try:
-            os.environ["PATH"] = self.install_dir + os.pathsep + os.environ["PATH"] # Add install directory to PATH variables temporarily
+            if self.install_dir:
+                os.environ["PATH"] = self.install_dir + os.pathsep + os.environ["PATH"] # Add install directory to PATH variables temporarily
             ollama_path = shutil.which("ollama")
             if ollama_path:
                 return ollama_path  # Ollama is installed
@@ -164,16 +197,15 @@ class OllamaInstaller:
 
         except Exception as e:
             print(f"Error checking Ollama installation: {e}")
-            input("Press Enter to continue...")
             return False  # Assume not installed on error
         
     def install_ollama(self):
         """Installs Ollama using the downloaded installer."""
         self.write_log("Starting Ollama installation...")
-        ollama_path = self.is_ollama_installed()
-        if ollama_path:
-            print(f"Skipping installation ollama already found at {ollama_path}")
-            self.write_log(f"Skipping installation ollama already found at {ollama_path}")
+        ollama_installed = self.check_ollama_installed()
+        if ollama_installed:
+            print(f"Skipping installation ollama already found.")
+            self.write_log(f"Skipping installation ollama already found.")
             return
 
         if not os.path.exists(self.installer_path):
@@ -204,8 +236,14 @@ class OllamaInstaller:
             stdout, stderr = process.communicate()
 
             if process.returncode == 0:
-                self.write_log("Ollama installed successfully.")
-                print("\nOllama installed successfully!")
+                ollama_path = self.is_ollama_installed()
+                if ollama_path:
+                    if self.set_ollama_env_var():
+                        self.write_log(f"{self.install_dir} is added to PATH variable")
+                    else:
+                        self.write_log(f"failed to add {self.install_dir} to PATH variable")
+                    self.write_log(f"Ollama installed successfully at {ollama_path}")
+                    print(f"\nOllama installed successfully at {ollama_path}")
             else:
                 self.write_log(f"Installation failed. Error: {stderr.strip()}")
                 print(f"\nInstallation failed. Error: {stderr.strip()}")
@@ -231,13 +269,14 @@ class OllamaInstaller:
         #     print("Invalid path location for saving the models")
         #     return 
         existing_value = self.system_var_exists("OLLAMA_MODELS")
-
-        if existing_value:
+        if existing_value and existing_value != models_path :
             print(f"Environment variable OLLAMA_MODELS already exists with value: {existing_value}")
             choice = input(f"Do you want to override it with {models_path}? (y/N): ").strip().lower()
             if choice != "y":
                 print(f"Ollama models will be installed in {existing_value}.")
                 return
+        else:
+            return
         command = f"cmd /c setx OLLAMA_MODELS \"{models_path}\" /M"
 
         process = subprocess.Popen([
@@ -256,17 +295,62 @@ class OllamaInstaller:
             print("Admin access denied or UAC prompt was closed!")
             self.write_log("Admin access denied or UAC prompt was closed!")
             return
-        
-# Example usage
+
+    def set_ollama_env_var(self):
+        print("Adding Ollama executable directory to system PATH")
+
+        command = f'setx PATH "%PATH%;{self.install_dir}" /M'
+
+        # Run the command as administrator using PowerShell
+        process = subprocess.Popen([
+            "powershell",
+            "-Command",
+            f"Start-Process cmd -ArgumentList '/c {command}' -Verb RunAs"
+        ], shell=True)
+
+        self.write_log(f"🛠 Running command: {command}")
+
+        process.wait()
+
+        if process.returncode == 0:
+            self.write_log(f"Successfully added Ollama to PATH: {self.install_dir}")
+            print(f"Ollama path added: {self.install_dir}")
+            return True
+        else:
+            print("Admin access denied or UAC prompt was closed! while trying to add the Ollama path to PATH variable")
+            self.write_log("Admin access denied or UAC prompt was closed! while trying to add the Ollama path to PATH variable")
+            return False
+
+
 if __name__ == "__main__":
-    install_directory = r"C:\AI_MODEL\ollama"
-    models_location = r"C:\AI_MODEL\ollama\models"
-    mode = "silent"  # Change to None for normal mode
-    debug = True  # Set to True for real-time log monitoring
+    # Demo Usage:
+    # python ollama_installer.py -i "C:/path/to/install" -m "C:/path/to/models" -M silent -d -s "C:/path/to/OllamaSetup.exe"
+    # This command installs Ollama to the specified install directory, sets models location, and enables debug mode.
+    parser = argparse.ArgumentParser(description="Ollama Installer Script")
+    parser.add_argument("-i", "--install_dir", type=str, help="Directory where Ollama should be installed", required=False)
+    parser.add_argument("-m", "--models_path", type=str, help="Path where models should be stored", required=False)
+    parser.add_argument("-M", "--mode", type=str, help="Installation mode (e.g., silent, VERYSILENT)", required=False, default="silent")
+    parser.add_argument("-d", "--debug", action="store_true", help="Enable debug mode")
+    parser.add_argument("-s", "--setup_path", type=str, help="Path to an existing Ollama setup file (if available)", required=False)
 
+    args = parser.parse_args()
 
-    installer = OllamaInstaller(install_directory, models_location, mode, debug)
-    installer.download_installer()
-    installer.install_ollama()
-    installer.set_models_location(models_location)
-    installer.restart_ollama()
+    # Check if the specified setup file path exists
+    if args.setup_path and not os.path.exists(args.setup_path):
+        print(f"Error: The specified setup file path '{args.setup_path}' does not exist.")
+        exit(1)
+
+    installer = OllamaInstaller(args.install_dir, args.setup_path, args.models_path, args.mode, args.debug)
+
+    # Check if Ollama is already installed
+    if installer.check_ollama_installed():
+        print("Ollama is already installed.")
+        if not installer.is_ollama_installed():
+            print("Warning! No environment variable is set for Ollama.")
+    else:
+        installer.download_installer()
+        installer.install_ollama()
+        if args.models_path:
+            installer.set_models_location(args.models_path)
+        installer.restart_ollama()
+

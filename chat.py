@@ -14,11 +14,10 @@ class Chat(Mongo):
             self.mongo_client = Mongo(mongo_client_url, database, collection)
             self.history = self.mongo_client.get_history(model=self.model)
             if len(self.history) == 0:
-                pass
-                # self.history.append({"role": "system", "content": "You are a helpful assistant."})
+                self.history.append({"role": "assistant", "content": "You are a helpful assistant."})
         except Exception as e:
             print(f"Error initializing ChatHistory: {e}")
-            self.history = [{"role": "system", "content": "You are a helpful assistant."}]
+            self.history = [{"role": "assistant", "content": "You are a helpful assistant."}]
 
     def process_question(self, question):
         """Processes the user's question and returns a response."""
