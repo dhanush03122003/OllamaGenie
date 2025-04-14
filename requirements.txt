@@ -6,3 +6,5 @@ ollama
 pymongo
 requests
 tqdm
+pywin32
+keyboard
