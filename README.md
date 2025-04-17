@@ -38,8 +38,6 @@ Activate the virtual environment:
     Install all required Python packages from the requirements.txt file: 
     pip install -r requirements.txt
     Note: For speech recognition, ensure you have a working microphone. On Linux, you may need portaudio
-    # Ubuntu/Debian:
-    sudo apt-get install portaudio19-dev
 
 4. Install Ollama
     The project includes a script to install Ollama on Windows. 
