@@ -8,8 +8,8 @@ from tqdm import tqdm
 from requests.adapters import HTTPAdapter, Retry
 import argparse
 
-
 class OllamaInstaller:
+    """Handles the installation and management of Ollama software."""
     def __init__(self, install_dir=None, setup_file_dir=None,  models_path=None, mode=None, debug=False ):
         """
         Initialize the Ollama Installer.
@@ -41,7 +41,7 @@ class OllamaInstaller:
             os.makedirs(self.models_path, exist_ok=True)
 
     def kill_ollama(self):
-        """Kill all Ollama processes."""
+        """Terminates all running Ollama processes."""
         processes = ["ollama.exe", "ollama app.exe"]
 
         for process in processes:
@@ -69,7 +69,7 @@ class OllamaInstaller:
                 print(error_message)
 
     def start_ollama(self):
-        """Restart Ollama server and print its output."""
+        """Starts the Ollama server and captures its output."""
         try:
             ollama_path = os.path.join(self.install_dir, "ollama app.exe")
             process = subprocess.Popen(
@@ -98,11 +98,12 @@ class OllamaInstaller:
             print(f"An error occurred while starting Ollama: {e}")
 
     def restart_ollama(self):
+        """Restarts the Ollama server by stopping and starting it."""
         self.kill_ollama()
         self.start_ollama()
 
     def get_log_filename(self):
-        """Generate a unique log filename in the format: {base_name}_{dd-mm-yyyy}_{hrs-mins-secs}.log"""
+        """Generates a unique log filename with timestamp."""
         base_log_file = "ollama_install.log"
         if not os.path.exists(base_log_file):
             return base_log_file
@@ -110,12 +111,12 @@ class OllamaInstaller:
         return f"ollama_install_{timestamp}.log"
 
     def write_log(self, message):
-        """Writes a message to the log file with a timestamp."""
+        """Appends a timestamped message to the log file."""
         with open(self.log_file, "a", encoding="utf-8") as f:
             f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {message}\n")
 
     def download_installer(self, chunk_size=1024, max_retries=5):
-        """Downloads the Ollama setup file with a progress bar and retry logic."""
+        """Downloads the Ollama setup file with progress tracking and retries."""
         url = "https://ollama.com/download/OllamaSetup.exe"
 
         if os.path.exists(self.installer_path):
@@ -150,7 +151,7 @@ class OllamaInstaller:
             raise ConnectionError(f"Failed to download the file: {e}")
 
     def tail_log_file(self, process):
-        """Reads and prints new lines from the log file while the installation process is running."""
+        """Monitors and prints new log file entries during installation."""
         last_size = 0
         while process.poll() is None:  # Stop when process ends
             try:
@@ -166,6 +167,7 @@ class OllamaInstaller:
                 time.sleep(0.5)  # Retry if file is locked
 
     def check_ollama_installed(self):
+        """Checks if Ollama is installed using PowerShell package query."""
         command = (
             'powershell -Command '
             '"@(Get-Package | Where-Object { $_.Name -like \'*ollama*\' })"'
@@ -184,8 +186,8 @@ class OllamaInstaller:
             return True
 
     def is_ollama_installed(self):
+        """Verifies Ollama installation by checking for its executable."""
         print("Checking if Ollama is installed...")
-        """Checks if Ollama is installed by looking for its executable."""
         try:
             if self.install_dir:
                 os.environ["PATH"] = self.install_dir + os.pathsep + os.environ["PATH"] # Add install directory to PATH variables temporarily
@@ -200,7 +202,7 @@ class OllamaInstaller:
             return False  # Assume not installed on error
         
     def install_ollama(self):
-        """Installs Ollama using the downloaded installer."""
+        """Executes the Ollama installation process."""
         self.write_log("Starting Ollama installation...")
         ollama_installed = self.check_ollama_installed()
         if ollama_installed:
@@ -253,7 +255,7 @@ class OllamaInstaller:
             print(f"Unexpected error: {e}")
 
     def system_var_exists(self, var_name):
-        """Check if a system environment variable exists."""
+        """Checks for the existence of a system environment variable."""
         try:
             result = subprocess.run(
                 ["powershell", "-Command", f"[System.Environment]::GetEnvironmentVariable('{var_name}', 'Machine')"],
@@ -265,6 +267,7 @@ class OllamaInstaller:
             return None
         
     def set_models_location(self,models_path):
+        """Sets the OLLAMA_MODELS environment variable for model storage."""
         # if models_path is not None and not os.path.exists(models_path):
         #     print("Invalid path location for saving the models")
         #     return 
@@ -297,6 +300,7 @@ class OllamaInstaller:
             return
 
     def set_ollama_env_var(self):
+        """Adds Ollama's executable directory to the system PATH."""
         print("Adding Ollama executable directory to system PATH")
 
         command = f'setx PATH "%PATH%;{self.install_dir}" /M'
@@ -353,4 +357,3 @@ if __name__ == "__main__":
         if args.models_path:
             installer.set_models_location(args.models_path)
         installer.restart_ollama()
-
