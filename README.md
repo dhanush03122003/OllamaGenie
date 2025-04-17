@@ -31,7 +31,7 @@ Activate the virtual environment:
     Windows: venv\Scripts\activate
     ## Solution for problem -- cannot be loaded because running scripts is disabled on this system. For more information, see about_Execution_Policies at
     https:/go.microsoft.com/fwlink/?LinkID=135170:
-        Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass, execute this to bypass the permissions temporarily
+        "Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass" execute this to bypass the permissions temporarily
 
 
 3. Install Dependencies
