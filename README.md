@@ -45,9 +45,6 @@ Windows (for Ollama installer; other OS users must install Ollama manually)
 
     ```bash 
     git clone https://github.com/dhanush03122003/OllamaGenie.git
-    ```
-
-    ```bash 
     cd OllamaGenie
     ```
 
