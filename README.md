@@ -2,6 +2,8 @@
 
 A conversational AI assistant in Python leveraging Ollama models for natural, interactive chat via text or speech. Chat history is stored in MongoDB, and the project includes tools for easy Ollama installation, model management, and real-time user interaction.
 
+<br>
+
 ## 🚀 Features
 Ollama Model Integration: Install, search, and manage Ollama models with a user-friendly interface.
 
@@ -13,6 +15,7 @@ Persistent Chat History: All conversations are stored in MongoDB for each model.
 
 Cross-Platform: Windows installer for Ollama; manual setup possible for other OSes.
 
+<br>
 
 ## 📂 Project Structure
 
@@ -26,6 +29,7 @@ Cross-Platform: Windows installer for Ollama; manual setup possible for other OS
     ├── requirements.txt       # Python dependencies
     ├── README.md              # Project documentation
 
+<br>
 
 ## 🛠 Prerequisites
 Python 3.8+
@@ -39,6 +43,8 @@ Git
 Download Git
 
 Windows (for Ollama installer; other OS users must install Ollama manually)
+
+<br>
 
 ## ⚡️ Quickstart
 1. Clone the Repository
@@ -72,9 +78,7 @@ Windows (for Ollama installer; other OS users must install Ollama manually)
     ```
 
 4. Install Ollama (Windows)
-    ```bash
-    python ollama_installer.py -i "C:/ollama" -m "C:/ollama/models" -M silent
-    ```
+    >python ollama_installer.py -i "C:/ollama" -m "C:/ollama/models" -M silent
 
     - `-i`: Installation directory
     - `-m`: Model storage directory
@@ -94,6 +98,8 @@ Windows (for Ollama installer; other OS users must install Ollama manually)
     python chat_assistant.py
     ```
 
+<br>
+
 ## 💬 Usage
 
 * Model Selection:
@@ -111,6 +117,8 @@ Windows (for Ollama installer; other OS users must install Ollama manually)
     - In speech mode, speak your question; responses are read aloud.
     - Type or say exit, quit, or goodbye to end the session.
 
+<br>
+
 ## 🧩 Troubleshooting
 * Ollama Installation Fails:
     - Ensure admin rights and a stable internet connection.
@@ -125,6 +133,8 @@ Windows (for Ollama installer; other OS users must install Ollama manually)
 
 * Model Not Found:
     - Ensure Ollama is installed and models are downloaded.
+
+<br>
 
 ## 🤝 Contributing
 
@@ -150,10 +160,10 @@ Contributions are welcome!
 
 5. Open a Pull Request
 
+<br>
 
 
-
-## License
+## 📝 License
 
 MIT License
 
