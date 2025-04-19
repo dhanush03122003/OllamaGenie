@@ -13,8 +13,6 @@ Text-to-Speech Output: Hear responses aloud, with spacebar to interrupt playback
 
 Persistent Chat History: All conversations are stored in MongoDB for each model.
 
-Cross-Platform: Windows installer for Ollama; manual setup possible for other OSes.
-
 <br>
 
 ## 📂 Project Structure
@@ -42,7 +40,7 @@ Ensure it runs locally at mongodb://localhost:27017/
 Git
 Download Git
 
-Windows (for Ollama installer; other OS users must install Ollama manually)
+Windows (for Ollama installer)
 
 <br>
 
@@ -72,19 +70,15 @@ Windows (for Ollama installer; other OS users must install Ollama manually)
     pip install -r requirements.txt
     ```
 
-    On Linux, you may need:
-    ```bash 
-    sudo apt-get install portaudio19-dev
-    ```
 
-4. Install Ollama (Windows)
+4. Install Ollama (Windows only)
     >python ollama_installer.py -i "C:/ollama" -m "C:/ollama/models" -M silent
 
     - `-i`: Installation directory
     - `-m`: Model storage directory
     - `-M`: Installation mode (`silent` for minimal prompts)
-
-    Non-Windows users: Install Ollama manually and ensure ollama is in your PATH.
+     - `-d`, `--debug`: Enable debug mode (add this flag to activate detailed logging)
+    - `-s`, `--setup_path`: Path to an existing Ollama setup file (if you have already downloaded the installer)
 
 5. Start MongoDB
     ```bash 
@@ -129,60 +123,9 @@ Windows (for Ollama installer; other OS users must install Ollama manually)
 
 * Speech Issues:
     - Test your microphone.
-    - On Linux, ensure portaudio is installed.
 
 * Model Not Found:
     - Ensure Ollama is installed and models are downloaded.
 
 <br>
 
-## 🤝 Contributing
-
-Contributions are welcome!
-
-1. Fork the repository
-
-2. Create a feature branch:
-
-    ```bash 
-    git checkout -b feature/your-feature
-    ```
-
-3. Commit your changes:
-    ```bash 
-    git commit -m "Add your feature"
-    ```
-
-4. Push to your branch:
-    ```bash 
-    git push origin feature/your-feature
-    ```
-
-5. Open a Pull Request
-
-<br>
-
-
-## 📝 License
-
-MIT License
-
-Copyright (c) 2025 dhanush03122003
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
